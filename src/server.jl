@@ -1,8 +1,5 @@
 using Sockets
 
-"""
-Parent type for all OSC Server implementations.
-"""
 abstract type OSCServer end
 
 """

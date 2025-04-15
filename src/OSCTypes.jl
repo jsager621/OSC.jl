@@ -4,6 +4,11 @@ abstract type BundleElement end
 #-------------------------------------------
 # Message
 #-------------------------------------------
+"""
+Basic OSCMessage consisting of an `address`, `format` and a list of `args`.
+Contents are in parsed form, meaning the initial ',' in the format string or any
+trailing null bytes in the data are not present here.
+"""
 struct OSCMessage
     address::String
     format::String
@@ -35,6 +40,9 @@ end
 #-------------------------------------------
 # Bundle
 #-------------------------------------------
+"""
+OSCBundle type consisting of a `timetag` and a vector of `BundleElement`s.
+"""
 struct OSCBundle
     timetag::UInt64
     elements::Vector{BundleElement}
@@ -59,6 +67,10 @@ end
 #-------------------------------------------
 # Element
 #-------------------------------------------
+"""
+Parent type for elements in an `OSCBundle`.
+Consists of the element `size` and its `content`.
+"""
 struct OSCBundleElement <: BundleElement
     size::UInt32
     content::Union{OSCBundle, OSCMessage}
@@ -83,9 +95,20 @@ end
 #-------------------------------------------
 # Blob
 #-------------------------------------------
+"""
+OSCBlob type to send `blob` elements via OSC.
+Consists of the 32 bit `size` and the corresponding `data` vector.
+"""
 struct OSCBlob
     size::UInt32
     data::Vector{UInt8}
+
+    function OSCBlob(size::UInt32, data::Vector{UInt8})
+        if length(data) != size
+            throw(ArgumentError("Blob size and data length do not match: $size vs $(length(data))"))
+        end
+        return new(size, data)
+    end
 end
 
 function Base.show(io::IO, blob::OSCBlob)

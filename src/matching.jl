@@ -27,7 +27,7 @@ true
 julia> matchOSC("/do/match/me/5", "/*/match/me/[0-9]")
 true
 
-matchOSC("/wild/card", "/{card,wild}/{card,wild}")
+julia> matchOSC("/wild/card", "/{card,wild}/{card,wild}")
 true
 ```
 """
