@@ -218,25 +218,26 @@ Return the argument and the following 32 bit aligned index.
 
         if c ∈ "rc"
             # RGBA and ascii character don't change with endianness
-            arg = reinterpret(UInt32, buffer[idx:idx+3])[1]
+            @inbounds arg = reinterpret(UInt32, buffer[idx:idx+3])[1]
         end
         if c == 'i'
-            arg = reinterpret(Int32, decode_uint32(buffer[idx:idx+3]))[1]
+            @inbounds arg = reinterpret(Int32, decode_uint32(buffer[idx:idx+3]))[1]
         end
         if c == 'f'
-            arg = reinterpret(Float32, decode_uint32(buffer[idx:idx+3]))[1]
+            @inbounds arg = reinterpret(Float32, decode_uint32(buffer[idx:idx+3]))[1]
         end
         return arg, idx+4
     end
 
     # osc string and "Symbol" string
     if c ∈ "sS"
-        if 0x00 ∉ buffer[idx:end]
-            throw(OSCParseException("Argument string is not null terminated."))
+        for i in idx:length(buffer)
+            if buffer[i] == 0x00
+                return String(buffer[idx:i-1]), align_32(i)
+            end
         end
 
-        null_byte = idx + findfirst(isequal(0x00), buffer[idx:end]) - 1
-        return String(buffer[idx:null_byte-1]), align_32(null_byte)
+        throw(OSCParseException("Argument string is not null terminated."))       
     end
 
     # binary blob
@@ -254,7 +255,7 @@ Return the argument and the following 32 bit aligned index.
             throw(OSCParseException("Out of space to parse blob of size $(total_length)!"))
         end
 
-        data = buffer[idx+4:idx+3+data_length]
+        @inbounds data = buffer[idx+4:idx+3+data_length]
         arg = OSCBlob(data_length, data)
 
         return arg, align_32(idx+data_length)
@@ -267,13 +268,13 @@ Return the argument and the following 32 bit aligned index.
         end
 
         if c == 'h'
-            arg = reinterpret(Int64, decode_uint64(buffer[idx:idx+7]))
+            @inbounds arg = reinterpret(Int64, decode_uint64(buffer[idx:idx+7]))
         end
         if c == 'd'
-            arg = reinterpret(Float64, decode_uint64(buffer[idx:idx+7]))
+            @inbounds arg = reinterpret(Float64, decode_uint64(buffer[idx:idx+7]))
         end
         if c == 't'
-            arg = decode_uint64(buffer[idx:idx+7])
+            @inbounds arg = decode_uint64(buffer[idx:idx+7])
         end
 
         return arg, idx+8
@@ -286,7 +287,7 @@ Return the argument and the following 32 bit aligned index.
             throw(OSCParseException("Out of space to parse a 32 bit midi from buffer!"))
         end
 
-        arg = buffer[idx:idx+3]
+        @inbounds arg = buffer[idx:idx+3]
         return arg, idx+4
     end
 
