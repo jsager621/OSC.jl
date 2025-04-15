@@ -16,7 +16,13 @@ struct OSCMessage
 end
 
 function OSCMessage(address::StringView, format::StringView, args...)
-    return OSCMessage(address, format, Any[args...])
+    vec_args = Any[args...]
+    for i in eachindex(vec_args)
+        if typeof(vec_args[i]) == String
+            vec_args[i] = StringView(vec_args[i])
+        end
+    end
+    return OSCMessage(address, format, vec_args)
 end
 
 function OSCMessage(address::StringView)
@@ -24,7 +30,7 @@ function OSCMessage(address::StringView)
 end
 
 function OSCMessage(address::Vector{UInt8}, format::Vector{UInt8}, args...)
-    return OSCMessage(StringView(address), StringView(format), Any[args...])
+    return OSCMessage(StringView(address), StringView(format), args...)
 end
 
 function OSCMessage(address::Vector{UInt8})
@@ -32,7 +38,7 @@ function OSCMessage(address::Vector{UInt8})
 end
 
 function OSCMessage(address::String, format::String, args...)
-    return OSCMessage(StringView(address), StringView(format), Any[args...])
+    return OSCMessage(StringView(address), StringView(format), args...)
 end
 
 function OSCMessage(address::String)

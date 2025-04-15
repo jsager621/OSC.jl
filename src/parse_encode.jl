@@ -14,12 +14,6 @@ const BUNDLE_ID = unsafe_load(Ptr{UInt64}(Base.pointer(BUNDLE_VEC)), 1)
 # i.e. x = 3 => align_32(x) = 5
 align_32(x) = 4 - (x - 1) % 4 + x
 
-function pad_32(data::Vector{UInt8})::Vector{UInt8}
-    pad_len = align_32(length(data)) - 1 - length(data)
-    data = vcat(data, zeros(UInt8, pad_len))
-    return data
-end
-
 # put UInt32 into big endian byte array
 function encode_uint32(val::UInt32)::Vector{UInt8}
     ptr = pointer(reinterpret(UInt8, [val]))
@@ -311,40 +305,47 @@ end
 """
 Encode the given `arg` of type `c` to its network output byte vector.
 """
-function encodeArgument(c::Char, arg::Any)::Vector{UInt8}
+function encodeArgument(data::Vector{UInt8}, idx::Int64, c::Char, arg::Any)::Int64
     # numbers that care about endianness
     if c ∈ "if"
-        return encode_uint32(reinterpret(UInt32, arg))
+        @inbounds data[idx:idx+3] = encode_uint32(reinterpret(UInt32, arg))
+        return idx+4
     end
 
     if c ∈ "hdt"
-        return encode_uint64(reinterpret(UInt64, arg))
+        @inbounds data[idx:idx+7] = encode_uint64(reinterpret(UInt64, arg))
+        return idx+8
     end
 
     # midi is just 4 byte vector
     if c == 'm'
-        return arg
+        data[idx:idx+3] = arg
+        return idx+4
     end
 
     # strings can just be converted directly and padded
     if c ∈ "Ss"
-        return pad_32(vcat(Vector{UInt8}(arg), 0x00))
+        data[idx:idx+length(arg.data)-1] = arg.data
+        return align_32(idx+length(arg.data)+1)
     end
 
     # RGBA and ascii stay in the same order and are already 32 bit
     if c ∈ "rc"
-        return reinterpret(UInt8, [arg])
+        data[idx:idx+3] = reinterpret(UInt8, [arg])
+        return idx+4
     end
 
     # blobs are 32 bit size followed by arbitrary data
     if c == 'b'
         s = encode_uint32(arg.size)
-        return vcat(s, arg.data)
+        data[idx:idx+3] = s
+        data[idx+4:idx+3+arg.size] = arg.data
+        return idx + 4 + arg.size
     end
 
-    # NI
+    # TFNI
     if c ∈ "TFNI"
-        return UInt8[]
+        return idx
     end
 
     # TODO '[' and ']'
@@ -445,9 +446,7 @@ function encodeOSC(msg::OSCMessage)::Vector{UInt8}
     # arguments
     #---------------
     for i in eachindex(msg.format)
-        arg = encodeArgument(msg.format[i], msg.args[i])
-        @inbounds data[idx:idx+length(arg)-1] = arg
-        idx = idx+length(arg)
+        idx = encodeArgument(data, idx, msg.format[i], msg.args[i])
     end
 
     return data
