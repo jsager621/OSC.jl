@@ -156,7 +156,7 @@ function parseMessage(buffer::Vector{UInt8})::OSCMessage
         throw(OSCParseException("Address string is not null terminated."))
     end
 
-    addr_vector = buffer[1:findfirst(a -> a == 0x00, buffer)-1]
+    addr_vector = buffer[1:findfirst(isequal(0x00), buffer)-1]
     address = String(reinterpret(UInt8, addr_vector))
 
     # extract format
@@ -164,11 +164,11 @@ function parseMessage(buffer::Vector{UInt8})::OSCMessage
     format_end = 0
 
     if UInt8(',') ∈ buffer
-        format_start = findfirst(a -> a == UInt8(','), buffer) + 1
+        format_start = findfirst(isequal(UInt8(',')), buffer) + 1
         if 0x00 ∉ buffer[format_start:end]
             throw(OSCParseException("Format string is not null terminated."))
         end
-        format_end = format_start + findfirst(a -> a == 0x00, buffer[format_start:end]) - 1
+        format_end = format_start + findfirst(isequal(0x00), buffer[format_start:end]) - 1
         format = buffer[format_start:format_end - 1]
     else
         # no format string, no arguments to parse
@@ -218,7 +218,7 @@ function parseArgument(idx::Int64, buffer::Vector{UInt8}, c::UInt8)::Tuple{Any, 
             throw(OSCParseException("Argument string is not null terminated."))
         end
 
-        null_byte = idx + findfirst(a -> a == 0x00, buffer[idx:end]) - 1
+        null_byte = idx + findfirst(isequal(0x00), buffer[idx:end]) - 1
         return String(buffer[idx:null_byte-1]), align_32(null_byte)
     end
 
