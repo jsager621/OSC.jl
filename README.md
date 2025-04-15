@@ -70,6 +70,13 @@ srv = OSCServerUDP(ip"127.0.0.1", 8000, callbacks)
 # and calls myCallback or myOtherCallback if the messages
 # address pattern fits.
 t = Threads.@spawn listenForever(srv)
+
+# do some other things
+# ....
+sleep(5)
+
+# close the server socket
+close(srv)
 ```
 
 # Compatibility
