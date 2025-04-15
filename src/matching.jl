@@ -31,7 +31,7 @@ julia> matchOSC("/wild/card", "/{card,wild}/{card,wild}")
 true
 ```
 """
-function matchOSC(address::String, pattern::String)::Bool
+function matchOSC(address::StringView, pattern::StringView)::Bool
     if address == pattern
         return true
     end
@@ -43,7 +43,19 @@ function matchOSC(address::String, pattern::String)::Bool
     return match_basic(address, pattern)
 end
 
-function match_basic(address::String, pattern::String)::Bool
+function matchOSC(address::String, pattern::String)::Bool
+    return matchOSC(StringView(address), StringView(pattern))
+end
+
+function matchOSC(address::StringView, pattern::String)::Bool
+    return matchOSC(address, StringView(pattern))
+end
+
+function matchOSC(address::String, pattern::StringView)::Bool
+    return matchOSC(StringView(address), pattern)
+end
+
+function match_basic(address::StringView, pattern::StringView)::Bool
     # can go element by element and ignore the first one (always empty)
     p_elems = split(pattern, "/")[2:end]
     a_elems = split(address, "/")[2:end]
@@ -64,7 +76,7 @@ function match_basic(address::String, pattern::String)::Bool
     return true
 end
 
-function match_ss(address::String, pattern::String)::Bool
+function match_ss(address::StringView, pattern::StringView)::Bool
     """
     //foo - anything with "foo" in any branch
 

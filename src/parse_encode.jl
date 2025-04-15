@@ -173,7 +173,7 @@ function parseMessage(buffer::Vector{UInt8})::OSCMessage
 
     if comma > length(buffer) || buffer[comma] != UInt8(',')
         # no format string here
-        @inbounds return OSCMessage(String(buffer[1:addr_end]))
+        @inbounds return OSCMessage(StringView(buffer[1:addr_end]))
     end
 
     # get format string
@@ -196,13 +196,13 @@ function parseMessage(buffer::Vector{UInt8})::OSCMessage
     # function map here per type
     idx = align_32(format_end+1)
     arguments = Vector{Any}()
-    @inbounds format = String(buffer[format_start:format_end])
+    @inbounds format = StringView(buffer[format_start:format_end])
     for c in format
         arg, idx = parseArgument(idx, buffer, c)
         push!(arguments, arg)
     end
 
-    @inbounds return OSCMessage(String(buffer[1:addr_end]), format, arguments)
+    @inbounds return OSCMessage(StringView(buffer[1:addr_end]), format, arguments)
 end
 
 """
@@ -233,7 +233,7 @@ Return the argument and the following 32 bit aligned index.
     if c ∈ "sS"
         for i in idx:length(buffer)
             if buffer[i] == 0x00
-                return String(buffer[idx:i-1]), align_32(i)
+                return StringView(buffer[idx:i-1]), align_32(i)
             end
         end
 

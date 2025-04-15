@@ -10,17 +10,33 @@ Contents are in parsed form, meaning the initial ',' in the format string or any
 trailing null bytes in the data are not present here.
 """
 struct OSCMessage
-    address::String
-    format::String
+    address::StringView
+    format::StringView
     args::Vector{Any} # parsed arguments
 end
 
-function OSCMessage(address::String, format::String, args...)
+function OSCMessage(address::StringView, format::StringView, args...)
     return OSCMessage(address, format, Any[args...])
 end
 
-function OSCMessage(address::String)
+function OSCMessage(address::StringView)
     return OSCMessage(address, "", Any[])
+end
+
+function OSCMessage(address::Vector{UInt8}, format::Vector{UInt8}, args...)
+    return OSCMessage(StringView(address), StringView(format), Any[args...])
+end
+
+function OSCMessage(address::Vector{UInt8})
+    return OSCMessage(StringView(address), StringView(""), Any[])
+end
+
+function OSCMessage(address::String, format::String, args...)
+    return OSCMessage(StringView(address), StringView(format), Any[args...])
+end
+
+function OSCMessage(address::String)
+    return OSCMessage(StringView(address), StringView(""), Any[])
 end
 
 function Base.show(io::IO, msg::OSCMessage)

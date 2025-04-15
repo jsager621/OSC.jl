@@ -7,6 +7,7 @@ export OSCServerUDP, listenForever
 export OSCClientUDP
 
 using Sockets
+using StringViews
 
 include("OSCTypes.jl")
 include("parse_encode.jl")
