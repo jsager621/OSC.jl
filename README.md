@@ -1,5 +1,8 @@
 # OSC.jl
 
+
+[Docs](https://jsager621.github.io/OSC.jl/dev/) | [GitHub](https://github.com/jsager621/OSC.jl)
+
 Pure Julia implementation of the Open Sound Control format.
 The aim of this library is to provide full OSC 1.1 spec support and convenient APIs for its use.
 
