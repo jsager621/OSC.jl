@@ -1,0 +1,10 @@
+name = "OSC"
+uuid = "200a5610-f364-496a-9488-5f5efdb4a6bc"
+authors = ["jsager621"]
+version = "0.1.0"
+
+[deps]
+Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
+
+[compat]
+Sockets = "1.11.0"
