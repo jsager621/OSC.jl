@@ -152,47 +152,64 @@ function parseMessage(buffer::Vector{UInt8})::OSCMessage
     if buffer[1] != UInt8('/')
         throw(OSCParseException("Message string does not start with '/'."))
     end
-    if 0x00 ∉ buffer
+
+    # get address string
+    null_found = false
+    format_start = 0
+    addr_end = 0
+    comma = 0
+    for i in 2:length(buffer)
+        if buffer[i] == 0x00
+            null_found = true
+            comma = align_32(i)
+            addr_end = i-1
+            break
+        end
+    end
+
+    if !null_found
         throw(OSCParseException("Address string is not null terminated."))
     end
 
-    addr_vector = buffer[1:findfirst(isequal(0x00), buffer)-1]
-    address = String(reinterpret(UInt8, addr_vector))
+    if comma > length(buffer) || buffer[comma] != UInt8(',')
+        # no format string here
+        @inbounds return OSCMessage(String(buffer[1:addr_end]))
+    end
 
-    # extract format
-    format = Vector{UInt8}()
-    format_end = 0
-
-    if UInt8(',') ∈ buffer
-        format_start = findfirst(isequal(UInt8(',')), buffer) + 1
-        if 0x00 ∉ buffer[format_start:end]
-            throw(OSCParseException("Format string is not null terminated."))
+    # get format string
+    null_found = false
+    format_start = comma + 1
+    format_end = format_start
+    for i in format_start:length(buffer)
+        if buffer[i] == 0x00
+            null_found = true
+            format_end = i-1
+            break
         end
-        format_end = format_start + findfirst(isequal(0x00), buffer[format_start:end]) - 1
-        format = buffer[format_start:format_end - 1]
-    else
-        # no format string, no arguments to parse
-        return OSCMessage(address, "", Any[])
-    end  
+    end
+
+    if !null_found
+        throw(OSCParseException("Format string is not null terminated."))
+    end
 
     # for element in format: parse type + forward pointer
     # function map here per type
-    idx = align_32(format_end)
+    idx = align_32(format_end+1)
     arguments = Vector{Any}()
+    @inbounds format = String(buffer[format_start:format_end])
     for c in format
         arg, idx = parseArgument(idx, buffer, c)
         push!(arguments, arg)
     end
 
-    return OSCMessage(address, String(format), arguments)
+    @inbounds return OSCMessage(String(buffer[1:addr_end]), format, arguments)
 end
 
 """
 Parse the argument of type `c` starting at `idx` in the `buffer`.
 Return the argument and the following 32 bit aligned index.
 """
-function parseArgument(idx::Int64, buffer::Vector{UInt8}, c::UInt8)::Tuple{Any, Int64}
-    c = Char(c) 
+@inline function parseArgument(idx::Int64, buffer::Vector{UInt8}, c::Char)::Tuple{Any, Int64}
     # 32 bit number types
     if c ∈ "ifrc"
         if length(buffer) < idx+3
