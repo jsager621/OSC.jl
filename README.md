@@ -3,6 +3,8 @@
 Pure Julia implementation of the Open Sound Control format.
 The aim of this library is to provide full OSC 1.1 spec support and convenient APIs for its use.
 
+The project is in early development and almost certainly still contains bugs. As such, contributions and feature suggestions are greatly encouraged.
+
 
 # Features
 * message generation
@@ -72,7 +74,7 @@ t = Threads.@spawn listenForever(srv)
 
 # Compatibility
 To ensure correctness and interoperability, this package has been tested to correctly send messages to and receive messages from other OSC libraries.
-So far, this includes tests against:
+This includes tests against:
 * liblo - https://liblo.sourceforge.net/
 * oscpack - http://www.rossbencina.com/code/oscpack
 
