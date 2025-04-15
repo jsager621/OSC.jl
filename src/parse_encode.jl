@@ -421,26 +421,33 @@ UInt8[0x23, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x
 ```
 """
 function encodeOSC(msg::OSCMessage)::Vector{UInt8}
+    data = zeros(UInt8, encodedOSCSize(msg))
     #---------------
     # address
     #---------------
-    data = Vector{UInt8}(msg.address)
-    data = vcat(data, 0x00)
-    data = pad_32(data)
+    @inbounds data[1:length(msg.address.data)] = msg.address.data
+    idx = align_32(length(msg.address)+1)
 
+    if isempty(msg.format)
+        # no format, no args
+        return data
+    end
     #---------------
     # format
     #---------------
     # begin with ',' followed by the format string, followed by padding
-    data = vcat(data, UInt8(','))
-    data = vcat(data, Vector{UInt8}(msg.format), 0x00)
-    data = pad_32(data)
+    @inbounds data[idx] = UInt8(',')
+    format_end = idx+length(msg.format.data)
+    @inbounds data[idx+1:format_end] = msg.format.data
+    idx = align_32(format_end+1)
 
     #---------------
     # arguments
     #---------------
     for i in eachindex(msg.format)
-        data = vcat(data, encodeArgument(msg.format[i], msg.args[i]))
+        arg = encodeArgument(msg.format[i], msg.args[i])
+        @inbounds data[idx:idx+length(arg)-1] = arg
+        idx = idx+length(arg)
     end
 
     return data
@@ -448,15 +455,19 @@ end
 
 function encodeOSC(bundle::OSCBundle)::Vector{UInt8}
     # add "#bundle"
-    data = copy(BUNDLE_VEC)
+    data = zeros(UInt8, encodedOSCSize(bundle))
+    @inbounds data[1:8] = BUNDLE_VEC
 
     # encode timetag
-    data = vcat(data, encode_uint64(bundle.timetag))
+    @inbounds data[9:16] = encode_uint64(bundle.timetag)
+    idx = 17
 
     # encode elements
     for e in bundle.elements
-        data = vcat(data, encode_uint32(e.size))
-        data = vcat(data, encodeOSC(e.content))
+        encoded_content = encodeOSC(e.content)
+        @inbounds data[idx:idx+3] = encode_uint32(e.size)
+        @inbounds data[idx+4:idx+3+length(encoded_content)] = encoded_content
+        idx += 4 + length(encoded_content)
     end
 
     return data
