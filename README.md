@@ -92,6 +92,17 @@ So far, these tests have been done manually but they will eventually be automate
 For now, the folder `test/manual/` contains the package files and the corresponding other implementations they were run against.
 Note that compiling the C and C++ files there requires the rest of the liblo and oscpack libraries, respectively.
 
+# Performance
+The current state of the implementation has a lot of room for performance improvements. A simple read and write benchmark again liblo currently gives me:
+
+```
+Liblo parse:  56.270000 ns per message
+Liblo encode:  96.135000 ns per message
+
+OSC.jl parse: 247.30741977691653 ns per message
+OSC.jl encode: 1383.7789297103882 ns per message
+```
+
 # TODO
 * timetag handling (currently only handles as UInt64)
 * array (`[` and `]`) support
