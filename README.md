@@ -93,7 +93,7 @@ For now, the folder `test/manual/` contains the package files and the correspond
 Note that compiling the C and C++ files there requires the rest of the liblo and oscpack libraries, respectively.
 
 # Performance
-The current state of the implementation has a lot of room for performance improvements. A simple read and write benchmark again liblo currently gives me:
+The current state of the implementation has a lot of room for performance improvements. A simple read and write benchmark against liblo currently gives me:
 
 ```
 Liblo parse:  56.270000 ns per message
