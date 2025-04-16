@@ -29,6 +29,7 @@ sleep(5)
 # close the server socket
 close(srv)</code></pre><h1 id="Client"><a class="docs-heading-anchor" href="#Client">Client</a><a id="Client-1"></a><a class="docs-heading-anchor-permalink" href="#Client" title="Permalink"></a></h1><p>The <code>OSCClientUDP</code> is a simple wrapper around a <code>UDPSocket</code> that ensures sending a packet does not exceed the <code>max_payload</code> size. Additionally, the package defines <code>send</code> functions on top of <code>Sockets.send</code> to directly pass <code>OSCMessage</code> and <code>OSCBundle</code> objects to a <code>UDPSocket</code>.</p><pre><code class="language-julia hljs">using OSC
 using Sockets
+using StringViews
 
 HOST = ip&quot;127.0.0.1&quot;
 PORT = 8000
@@ -36,11 +37,11 @@ sock = UDPSocket()
 
 blob = OSCBlob(UInt32(8), UInt8[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8])
 base_types = OSCMessage(
-        &quot;/testmsg&quot;, 
-        &quot;ifsb&quot;, 
+        StringView(&quot;/testmsg&quot;), 
+        StringView(&quot;ifsb&quot;), 
         Int32(5),
         Float32(6),
-        &quot;test&quot;,
+        StringView(&quot;test&quot;),
         blob)
 
 println(base_types)
@@ -54,4 +55,4 @@ send(sock, HOST, PORT, encodeOSC(base_types))
 
 # or via the client object that ensures payload size limits
 client = OSCClientUDP(1024)
-send(client, HOST, PORT, base_types)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parse_encode/">« Encode and Parse</a><a class="docs-footer-nextpage" href="../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.1 on <span class="colophon-date" title="Wednesday 16 April 2025 07:57">Wednesday 16 April 2025</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+send(client, HOST, PORT, base_types)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parse_encode/">« Encode and Parse</a><a class="docs-footer-nextpage" href="../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.1 on <span class="colophon-date" title="Wednesday 16 April 2025 19:47">Wednesday 16 April 2025</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
