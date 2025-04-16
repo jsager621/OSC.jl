@@ -72,7 +72,7 @@ end
 function dispatch_message(srv::OSCServer, msg::OSCMessage)
     for k in keys(srv.match_callbacks)
         if srv.match_func(k, address(msg))
-            Threads.@spawn  srv.match_callbacks[k](srv, arguments(msg))
+            srv.match_callbacks[k](srv, arguments(msg))
         end
     end
 end

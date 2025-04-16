@@ -43,18 +43,18 @@ trailing null bytes in the data are not present here.
 """
 struct OSCMessage
     data::Vector{UInt8}
-    size::UInt64
-    address_end::UInt64
-    format_start::UInt64
-    format_end::UInt64
-    args_start::UInt64
+    size::UInt32
+    address_end::UInt32
+    format_start::UInt32
+    format_end::UInt32
+    args_start::UInt32
 end
 
 function OSCMessage(
     address::StringView, 
     format::StringView, 
     args...;
-    initial_alloc::UInt64=UInt64(256))
+    initial_alloc::UInt32=UInt32(256))
 
     initial_alloc = max(initial_alloc, length(address) + length(format) + 8)
     data = zeros(UInt8, initial_alloc)
@@ -66,7 +66,7 @@ function OSCMessage(
 
     # no format, no args
     if isempty(format)
-        return OSCMessage(buffer, length(buffer), addr_end, -1, -1, -1)
+        return OSCMessage(data, idx-1, length(address), 0, 0, 0)
     end
 
     # insert format
@@ -111,11 +111,13 @@ end
 
 
 function Base.show(io::IO, msg::OSCMessage)
+    form = msg.format_start != 0 ? format(msg) : ""
+    args = msg.args_start != 0 ? arguments(msg) : ""
     msg_repr = """
     OSCMessage:
     address: $(address(msg))
-    format: $(format(msg))
-    args: $(arguments(msg))
+    format: $form
+    args: $args
     """
     print(io, msg_repr)
 end

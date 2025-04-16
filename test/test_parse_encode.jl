@@ -42,11 +42,13 @@ function osc_messages()
         nothing,
         nothing)
 
-    return base_types, extended_types, everything
+    addr_only = OSCMessage(StringView("/only/addr"))
+
+    return base_types, extended_types, everything, addr_only
 end
 
 @testset "encoding" begin
-    base_types, extended_types, everything = osc_messages()
+    base_types, extended_types, everything, addr_only = osc_messages()
 
     """
     Encodes to:
@@ -95,11 +97,12 @@ end
 end
 
 @testset "parsing" begin
-    base_types, extended_types, everything = osc_messages()
+    base_types, extended_types, everything, addr_only = osc_messages()
 
     @test validateOSC(base_types, encodeOSC(base_types))
     @test validateOSC(extended_types, encodeOSC(extended_types))
     @test validateOSC(everything, encodeOSC(everything))
+    @test validateOSC(addr_only, encodeOSC(addr_only))
 
 
     x = OSCBundleElement(everything)

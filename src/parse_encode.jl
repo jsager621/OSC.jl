@@ -119,7 +119,7 @@ function parseMessage(buffer::Vector{UInt8})::OSCMessage
 
     if comma > length(buffer) || buffer[comma] != UInt8(',')
         # no format string here
-        return OSCMessage(buffer, length(buffer), addr_end, -1, -1, -1)
+        return OSCMessage(buffer, length(buffer), addr_end, 0, 0, 0)
     end
 
     # get format string
@@ -149,7 +149,7 @@ end
 Parse the argument of type `c` starting at `idx` in the `buffer`.
 Return the argument and the following 32 bit aligned index.
 """
-@inline function parseArgument(idx::UInt64, buffer::Vector{UInt8}, c::Char)::Tuple{Any, UInt64}
+@inline function parseArgument(idx::UInt32, buffer::Vector{UInt8}, c::Char)::Tuple{Any, UInt32}
     # 32 bit number types
     if c ∈ "ifrc"
         if length(buffer) < idx+3
