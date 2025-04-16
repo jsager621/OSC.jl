@@ -16,33 +16,7 @@ struct OSCMessage
 end
 
 function OSCMessage(address::StringView, format::StringView, args...)
-    vec_args = Any[args...]
-    for i in eachindex(vec_args)
-        if typeof(vec_args[i]) == String
-            vec_args[i] = StringView(vec_args[i])
-        end
-    end
-    return OSCMessage(address, format, vec_args)
-end
-
-function OSCMessage(address::StringView)
-    return OSCMessage(address, "", Any[])
-end
-
-function OSCMessage(address::Vector{UInt8}, format::Vector{UInt8}, args...)
-    return OSCMessage(StringView(address), StringView(format), args...)
-end
-
-function OSCMessage(address::Vector{UInt8})
-    return OSCMessage(StringView(address), StringView(""), Any[])
-end
-
-function OSCMessage(address::String, format::String, args...)
-    return OSCMessage(StringView(address), StringView(format), args...)
-end
-
-function OSCMessage(address::String)
-    return OSCMessage(StringView(address), StringView(""), Any[])
+    return OSCMessage(address, format, Any[args...])
 end
 
 function Base.show(io::IO, msg::OSCMessage)

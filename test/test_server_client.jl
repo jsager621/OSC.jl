@@ -1,11 +1,11 @@
 function get_msg()
     blob = OSCBlob(UInt32(8), UInt8[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8])
     base_types = OSCMessage(
-        "/testmsg", 
-        "ifsb", 
+        StringView("/testmsg"), 
+        StringView("ifsb"), 
         Int32(5),
         Float32(6),
-        "test",
+        StringView("test"),
         blob)
 
     return base_types
@@ -19,14 +19,14 @@ function get_bundle()
         OSCBundleElement(get_msg())])
 end
 
-function get_other_msg(address::String)
+function get_other_msg(address::StringView)
     blob = OSCBlob(UInt32(8), UInt8[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8])
     base_types = OSCMessage(
         address, 
-        "ifsb", 
+        StringView("ifsb"), 
         Int32(5),
         Float32(6),
-        "test",
+        StringView("test"),
         blob)
 
     return base_types
@@ -35,9 +35,9 @@ end
 function get_other_bundle()
     return OSCBundle(
         UInt64(0xC0FFEE), 
-        [OSCBundleElement(get_other_msg("/abc/123")), 
-        OSCBundleElement(get_other_msg("/def/123")), 
-        OSCBundleElement(get_other_msg("/abc/something"))])
+        [OSCBundleElement(get_other_msg(StringView("/abc/123"))), 
+        OSCBundleElement(get_other_msg(StringView("/def/123"))), 
+        OSCBundleElement(get_other_msg(StringView("/abc/something")))])
 end
 
 MSG_COUNTER = 0
@@ -104,7 +104,7 @@ end
     t2 = Threads.@spawn listenForever(srv2)
 
     sleep(0.2)
-    send_other_udp(encodeOSC(get_other_msg("/abc/dont/match/me")))
+    send_other_udp(encodeOSC(get_other_msg(StringView("/abc/dont/match/me"))))
     sleep(0.2)
     send_other_udp(encodeOSC(get_other_bundle()))
     sleep(0.2)

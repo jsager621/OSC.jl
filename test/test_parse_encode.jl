@@ -1,16 +1,16 @@
 function osc_messages()
     blob = OSCBlob(UInt32(8), UInt8[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8])
     everything = OSCMessage(
-        "/addr/osc", 
-        "ifsbhtdScrmTFNI", 
+        StringView("/addr/osc"), 
+        StringView("ifsbhtdScrmTFNI"), 
         Int32(5),
         Float32(6),
-        "test",
+        StringView("test"),
         blob,
         Int64(12345),
         UInt64(12345),
         Float64(47.11),
-        "Symbol",
+        StringView("Symbol"),
         UInt32(12),
         UInt32(255),
         UInt8[0x10, 0x20, 0x30, 0x40],
@@ -20,20 +20,20 @@ function osc_messages()
         nothing)
 
     base_types = OSCMessage(
-        "/addr/osc", 
-        "ifsb", 
+        StringView("/addr/osc"), 
+        StringView("ifsb"), 
         Int32(5),
         Float32(6),
-        "test",
+        StringView("test"),
         blob)
 
     extended_types = OSCMessage(
-        "/addr/osc", 
-        "htdScrmTFNI", 
+        StringView("/addr/osc"), 
+        StringView("htdScrmTFNI"), 
         Int64(12345),
         UInt64(12345),
         Float64(47.11),
-        "Symbol",
+        StringView("Symbol"),
         UInt32(12),
         UInt32(255),
         UInt8[0x10, 0x20, 0x30, 0x40],
