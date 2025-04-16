@@ -25,6 +25,7 @@ Creating and sending messages:
 ```julia
 using OSC
 using Sockets
+using StringViews
 
 HOST = ip"127.0.0.1"
 PORT = 8000
@@ -32,11 +33,11 @@ sock = UDPSocket()
 
 blob = OSCBlob(UInt32(8), UInt8[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8])
 base_types = OSCMessage(
-        "/testmsg", 
-        "ifsb", 
+        StringView("/testmsg"), 
+        StringView("ifsb"), 
         Int32(5),
         Float32(6),
-        "test",
+        StringView("test"),
         blob)
 
 println(base_types)
@@ -104,8 +105,8 @@ The current state of the implementation has a lot of room for performance improv
 Liblo parse:  56.270000 ns per message
 Liblo encode:  96.135000 ns per message
 
-OSC.jl parse: 247.30741977691653 ns per message
-OSC.jl encode: 1383.7789297103882 ns per message
+OSC.jl parse: 54.28445339202881 ns per message
+OSC.jl encode: 759.86647605896 ns per message
 ```
 
 # TODO

@@ -44,6 +44,7 @@ Additionally, the package defines `send` functions on top of `Sockets.send` to d
 ```julia
 using OSC
 using Sockets
+using StringViews
 
 HOST = ip"127.0.0.1"
 PORT = 8000
@@ -51,11 +52,11 @@ sock = UDPSocket()
 
 blob = OSCBlob(UInt32(8), UInt8[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8])
 base_types = OSCMessage(
-        "/testmsg", 
-        "ifsb", 
+        StringView("/testmsg"), 
+        StringView("ifsb"), 
         Int32(5),
         Float32(6),
-        "test",
+        StringView("test"),
         blob)
 
 println(base_types)

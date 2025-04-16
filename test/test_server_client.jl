@@ -44,7 +44,8 @@ MSG_COUNTER = 0
 CORRECT_MSG_COUNTER = 0
 function myCallback(srv, args)
     global MSG_COUNTER += 1
-    if args == get_msg().args
+
+    if args == arguments(get_msg())
         global CORRECT_MSG_COUNTER += 1  
     end
 end
@@ -53,7 +54,7 @@ OTHER_MSG_COUNTER = 0
 OTHER_CORRECT_MSG_COUNTER = 0
 function myOtherCallback(srv, args)
     global OTHER_MSG_COUNTER += 1
-    if args == get_msg().args
+    if args == arguments(get_msg())
         global OTHER_CORRECT_MSG_COUNTER += 1  
     end
 end

@@ -9,28 +9,88 @@ Basic OSCMessage consisting of an `address`, `format` and a list of `args`.
 Contents are in parsed form, meaning the initial ',' in the format string or any
 trailing null bytes in the data are not present here.
 """
+# struct OSCMessage
+#     address::StringView
+#     format::StringView
+#     args::Vector{Any} # parsed arguments
+# end
+
 struct OSCMessage
-    address::StringView
-    format::StringView
-    args::Vector{Any} # parsed arguments
+    data::Vector{UInt8}
+    size::UInt64
+    address_end::UInt64
+    format_start::UInt64
+    format_end::UInt64
+    args_start::UInt64
 end
 
-function OSCMessage(address::StringView, format::StringView, args...)
-    return OSCMessage(address, format, Any[args...])
+function OSCMessage(address::StringView, format::StringView, args...;initial_alloc::UInt64=UInt64(256))
+    initial_alloc = max(initial_alloc, length(address) + length(format) + 8)
+    data = zeros(UInt8, initial_alloc)
+
+    # insert address
+    @inbounds data[1:length(address.data)] = address.data
+    idx = align_32(length(address)+1)
+    format_start = idx + 1
+
+    # no format, no args
+    if isempty(format)
+        return OSCMessage(buffer, length(buffer), addr_end, -1, -1, -1)
+    end
+
+    # insert format
+    @inbounds data[idx] = UInt8(',')
+    format_end = idx + length(format.data)
+    @inbounds data[idx + 1:format_end] = format.data
+    idx = align_32(format_end+1) # null terminate + align
+    args_start = idx
+
+    # insert arguments
+    for a in args
+        if idx > length(data)
+            extend_buffer!(data)
+        end
+
+        idx = encodeArgument!(data, idx, a)
+    end
+
+    # create msg object
+    return OSCMessage(data, idx-1, length(address), format_start, format_end, args_start)
 end
+
+function OSCMessage(address::StringView)
+    return OSCMessage(address, StringView(""))
+end
+
+function address(msg::OSCMessage)::StringView
+    return StringView(msg.data[1:msg.address_end])
+end
+function format(msg::OSCMessage)::StringView
+    return StringView(msg.data[msg.format_start:msg.format_end])
+end
+function arguments(msg::OSCMessage)::Vector{Any}
+    arg_vec = Vector{Any}()
+    idx = msg.args_start
+    for i in msg.format_start:msg.format_end
+        arg, idx = parseArgument(idx, msg.data, Char(msg.data[i]))
+        push!(arg_vec, arg)
+    end
+    return arg_vec
+end
+
 
 function Base.show(io::IO, msg::OSCMessage)
     msg_repr = """
     OSCMessage:
-    address: $(msg.address)
-    format: $(msg.format)
-    args: $(msg.args)
+    address: $(address(msg))
+    format: $(format(msg))
+    args: $(arguments(msg))
     """
     print(io, msg_repr)
 end
 
 function Base.:(==)(x::OSCMessage, y::OSCMessage)
-    return x.address == y.address && x.format==y.format && x.args == y.args
+    return x.data[1:x.size] == y.data[1:y.size]
 end
 
 #-------------------------------------------

@@ -2,54 +2,6 @@
 Note: Input buffers for all functions are assumed to be 
 UInt8 in big endian order as specified by the OSC protocol.
 """
-
-# "#bundle"
-const BUNDLE_VEC = UInt8[0x23, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x00]
-const BUNDLE_ID = unsafe_load(Ptr{UInt64}(Base.pointer(BUNDLE_VEC)), 1)
-
-#-------------------------------------------
-# Helper Functions
-#-------------------------------------------
-# set x to the next 32 bit aligned starting index
-# i.e. x = 3 => align_32(x) = 5
-align_32(x) = 4 - (x - 1) % 4 + x
-
-# put UInt32 into big endian byte array
-function encode_uint32(val::UInt32)::Vector{UInt8}
-    ptr = pointer(reinterpret(UInt8, [val]))
-    out = zeros(UInt8, 4)
-    out[4] = unsafe_load(ptr)
-    out[3] = unsafe_load(ptr+1)
-    out[2] = unsafe_load(ptr+2)
-    out[1] = unsafe_load(ptr+3)
-    return out
-end
-
-# read uint32 from big endian vector
-function decode_uint32(data::Vector{UInt8})::UInt32
-    return (UInt32(data[4]) << 0) | (UInt32(data[3]) << 8) | (UInt32(data[2]) << 16) | (UInt32(data[1]) << 24)
-end
-
-# put UInt64 into big endian byte array
-function encode_uint64(val::UInt64)::Vector{UInt8}
-    ptr = pointer(reinterpret(UInt8, [val]))
-    out = zeros(UInt8, 8)
-    out[8] = unsafe_load(ptr)
-    out[7] = unsafe_load(ptr+1)
-    out[6] = unsafe_load(ptr+2)
-    out[5] = unsafe_load(ptr+3)
-    out[4] = unsafe_load(ptr+4)
-    out[3] = unsafe_load(ptr+5)
-    out[2] = unsafe_load(ptr+6)
-    out[1] = unsafe_load(ptr+7)
-    return out
-end
-
-# read uint64 from big endian vector
-function decode_uint64(data::Vector{UInt8})::UInt64
-    return ((UInt64(data[8]) << 0) | (UInt64(data[7]) << 8) | (UInt64(data[6]) << 16) | (UInt64(data[5]) << 24) |
-            (UInt64(data[4]) << 32) | (UInt64(data[3]) << 40) | (UInt64(data[2]) << 48) | (UInt64(data[1]) << 56))
-end
 #-------------------------------------------
 # API Functions
 #-------------------------------------------
@@ -110,14 +62,14 @@ function parseBundle(buffer::Vector{UInt8})::OSCBundle
     if length(buffer) < 16
         throw(OSCParseException("Bundle is shorter than 16 bytes and can not contain a valid time tag!"))
     end
-    timetag = decode_uint64(buffer[9:16])
+    @inbounds timetag = decode_uint64(buffer[9:16])
 
     # we already know the bundle is 32 bit aligned
     elements = Vector{BundleElement}()
     idx = 17
     while idx < length(buffer)
         # size of bundle element
-        size = decode_uint32(buffer[idx:idx+3])
+        @inbounds size = decode_uint32(buffer[idx:idx+3])
 
         # align with end of data
         new_idx = align_32(idx + size)
@@ -127,7 +79,7 @@ function parseBundle(buffer::Vector{UInt8})::OSCBundle
         end
 
         # this many bytes to parse
-        data_section = buffer[idx+4:new_idx-1]
+        @inbounds data_section = buffer[idx+4:new_idx-1]
         elem = OSCBundleElement(length(data_section), parseOSC(data_section))
         push!(elements, elem)
         idx = new_idx
@@ -167,7 +119,7 @@ function parseMessage(buffer::Vector{UInt8})::OSCMessage
 
     if comma > length(buffer) || buffer[comma] != UInt8(',')
         # no format string here
-        @inbounds return OSCMessage(StringView(buffer[1:addr_end]))
+        return OSCMessage(buffer, length(buffer), addr_end, -1, -1, -1)
     end
 
     # get format string
@@ -187,23 +139,17 @@ function parseMessage(buffer::Vector{UInt8})::OSCMessage
     end
 
     # for element in format: parse type + forward pointer
-    # function map here per type
-    idx = align_32(format_end+1)
-    arguments = Vector{Any}()
-    @inbounds format = StringView(buffer[format_start:format_end])
-    for c in format
-        arg, idx = parseArgument(idx, buffer, c)
-        push!(arguments, arg)
-    end
+    # TODO should we actually parse here or just trust whatever
+    # we got is a valid OSC packet?
 
-    @inbounds return OSCMessage(StringView(buffer[1:addr_end]), format, arguments)
+    return OSCMessage(buffer, length(buffer), addr_end, format_start, format_end, align_32(format_end+1))
 end
 
 """
 Parse the argument of type `c` starting at `idx` in the `buffer`.
 Return the argument and the following 32 bit aligned index.
 """
-@inline function parseArgument(idx::Int64, buffer::Vector{UInt8}, c::Char)::Tuple{Any, Int64}
+@inline function parseArgument(idx::UInt64, buffer::Vector{UInt8}, c::Char)::Tuple{Any, UInt64}
     # 32 bit number types
     if c ∈ "ifrc"
         if length(buffer) < idx+3
@@ -305,50 +251,47 @@ end
 """
 Encode the given `arg` of type `c` to its network output byte vector.
 """
-function encodeArgument(data::Vector{UInt8}, idx::Int64, c::Char, arg::Any)::Int64
-    # numbers that care about endianness
-    if c ∈ "if"
-        @inbounds data[idx:idx+3] = encode_uint32(reinterpret(UInt32, arg))
-        return idx+4
-    end
+function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::Union{Int32, Float32})::Int64
+    # if
+    @inbounds data[idx:idx+3] = encode_uint32(reinterpret(UInt32, arg))
+    return idx+4
+end
 
-    if c ∈ "hdt"
-        @inbounds data[idx:idx+7] = encode_uint64(reinterpret(UInt64, arg))
-        return idx+8
-    end
+function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::Union{Int64, UInt64, Float64})::Int64
+    # hdt
+    @inbounds data[idx:idx+7] = encode_uint64(reinterpret(UInt64, arg))
+    return idx+8
+end
 
-    # midi is just 4 byte vector
-    if c == 'm'
-        data[idx:idx+3] = arg
-        return idx+4
-    end
+function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::StringView)::Int64
+    # Ss
+    @inbounds data[idx:idx+length(arg.data)-1] = arg.data
+    return align_32(idx+length(arg.data)+1)
+end
 
-    # strings can just be converted directly and padded
-    if c ∈ "Ss"
-        data[idx:idx+length(arg.data)-1] = arg.data
-        return align_32(idx+length(arg.data)+1)
-    end
+function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::Vector{UInt8})::Int64
+    # m
+    data[idx:idx+3] = arg
+    return idx+4
+end
 
-    # RGBA and ascii stay in the same order and are already 32 bit
-    if c ∈ "rc"
-        data[idx:idx+3] = reinterpret(UInt8, [arg])
-        return idx+4
-    end
+function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::UInt32)::Int64
+    # rc
+    data[idx:idx+3] = reinterpret(UInt8, [arg])
+    return idx+4
+end
 
-    # blobs are 32 bit size followed by arbitrary data
-    if c == 'b'
-        s = encode_uint32(arg.size)
-        data[idx:idx+3] = s
-        data[idx+4:idx+3+arg.size] = arg.data
-        return idx + 4 + arg.size
-    end
+function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::OSCBlob)::Int64
+    # b
+    s = encode_uint32(arg.size)
+    data[idx:idx+3] = s
+    data[idx+4:idx+3+arg.size] = arg.data
+    return idx + 4 + arg.size
+end
 
+function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::Union{Nothing, Bool})::Int64
     # TFNI
-    if c ∈ "TFNI"
-        return idx
-    end
-
-    # TODO '[' and ']'
+    return idx
 end
 
 """
@@ -358,36 +301,7 @@ end
 Calculate the encoded size of the given `msg` or `bundle` in bytes.
 """
 function encodedOSCSize(msg::OSCMessage)::Int64
-    # address length + 0x00 + padding
-    size = align_32(length(msg.address) + 1) - 1
-
-    # ',' + length of format string + 0x00 + padding
-    size += align_32(length(msg.format) + 2) - 1
-
-    # args
-    for i in eachindex(msg.format)
-        c = msg.format[i]
-
-        # TODO '[' and ']'
-        if c ∈ "ifrmc"
-            size += 4
-        elseif c ∈ "htd"
-            size += 8
-        elseif c ∈ "TFNI"
-            size += 0
-        elseif c ∈ "Ss"
-            # string + null + padding
-            size += align_32(length(msg.args[i]) + 1) - 1
-        elseif c == 'b'
-            # 4 byte size
-            # that many bytes and padding
-            size += align_32(4 + msg.args[i].size) - 1 
-        else
-            throw(OSCParseException("Got format string with unknown char: $c"))
-        end
-    end
-
-    return size
+    return msg.size
 end
 
 function encodedOSCSize(bundle::OSCBundle)::Int64
@@ -422,34 +336,7 @@ UInt8[0x23, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x
 ```
 """
 function encodeOSC(msg::OSCMessage)::Vector{UInt8}
-    data = zeros(UInt8, encodedOSCSize(msg))
-    #---------------
-    # address
-    #---------------
-    @inbounds data[1:length(msg.address.data)] = msg.address.data
-    idx = align_32(length(msg.address)+1)
-
-    if isempty(msg.format)
-        # no format, no args
-        return data
-    end
-    #---------------
-    # format
-    #---------------
-    # begin with ',' followed by the format string, followed by padding
-    @inbounds data[idx] = UInt8(',')
-    format_end = idx+length(msg.format.data)
-    @inbounds data[idx+1:format_end] = msg.format.data
-    idx = align_32(format_end+1)
-
-    #---------------
-    # arguments
-    #---------------
-    for i in eachindex(msg.format)
-        idx = encodeArgument(data, idx, msg.format[i], msg.args[i])
-    end
-
-    return data
+    return msg.data[1:msg.size]
 end
 
 function encodeOSC(bundle::OSCBundle)::Vector{UInt8}

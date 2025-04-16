@@ -6,16 +6,18 @@
 
 ```julia
 using OSC
+using StringViews
 
-msg = OSCMessage("/my/address", "ifs", UInt32(15), Float32(3.45), "string")
+msg = OSCMessage(StringView("/my/address"), StringView("ifs"), UInt32(15), Float32(3.45), StringView("string"))
 ```
 
 `OSCBundle`s consist of a `timetag` and a numer of `OSCBundleElement`s where a `OSCBundleElement` can either contain an `OSCMessage` or another `OSCBundle`.
 
 ```julia
 using OSC
+using StringViews
 
-msg = OSCMessage("/my/address", "ifs", UInt32(15), Float32(3.45), "string")
+msg = OSCMessage(StringView("/my/address"), StringView("ifs"), UInt32(15), Float32(3.45), StringView("string"))
 
 bundle_element = OSCBundleElement(msg)
 bundle = OSCBundle(UInt64(123456), [bundle_element, bundle_element])
@@ -25,8 +27,9 @@ Both `OSCBundle` and `OSCMessage` can be encoded to their `Vector{UInt8}` repres
 
 ```julia
 using OSC
+using StringViews
 
-msg = OSCMessage("/my/address", "ifs", UInt32(15), Float32(3.45), "string")
+msg = OSCMessage(StringView("/my/address"), StringView("ifs"), UInt32(15), Float32(3.45), StringView("string"))
 bundle_element = OSCBundleElement(msg)
 bundle = OSCBundle(UInt64(123456), [bundle_element, bundle_element])
 
@@ -40,8 +43,9 @@ Any incoming message buffer of the correct format can be parsed to an `OSCMessag
 
 ```julia
 using OSC
+using StringViews
 
-msg = OSCMessage("/my/address", "ifs", UInt32(15), Float32(3.45), "string")
+msg = OSCMessage(StringView("/my/address"), StringView("ifs"), UInt32(15), Float32(3.45), StringView("string"))
 bundle_element = OSCBundleElement(msg)
 bundle = OSCBundle(UInt64(123456), [bundle_element, bundle_element])
 
