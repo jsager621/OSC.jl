@@ -24,6 +24,11 @@ The project is in early development and almost certainly still contains bugs. As
 Creating and sending messages:
 ```julia
 using OSC
+using Sockets
+
+HOST = ip"127.0.0.1"
+PORT = 8000
+sock = UDPSocket()
 
 blob = OSCBlob(UInt32(8), UInt8[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8])
 base_types = OSCMessage(
@@ -63,7 +68,7 @@ function myOtherCallback(srv, args)
 end
 
 callbacks = Dict{String, Function}(
-        "/testmsg" => (s, args) -> myCallback(s, args)
+        "/testmsg" => (s, args) -> myCallback(s, args),
         "/another/msg" => (s, args) -> myOtherCallback(s, args)
     )
 
