@@ -2,6 +2,38 @@
 abstract type BundleElement end
 
 #-------------------------------------------
+# Blob
+#-------------------------------------------
+"""
+OSCBlob type to send `blob` elements via OSC.
+Consists of the 32 bit `size` and the corresponding `data` vector.
+"""
+struct OSCBlob
+    size::UInt32
+    data::Vector{UInt8}
+
+    function OSCBlob(size::UInt32, data::Vector{UInt8})
+        if length(data) != size
+            throw(ArgumentError("Blob size and data length do not match: $size vs $(length(data))"))
+        end
+        return new(size, data)
+    end
+end
+
+function Base.show(io::IO, blob::OSCBlob)
+    blob_repr = """
+    OSCBlob:
+    size: $(blob.size)
+    data: $(blob.data)
+    """
+    print(io, blob_repr)
+end
+
+function Base.:(==)(x::OSCBlob, y::OSCBlob)
+    return x.size == y.size && x.data==y.data
+end
+
+#-------------------------------------------
 # Message
 #-------------------------------------------
 """
@@ -9,12 +41,6 @@ Basic OSCMessage consisting of an `address`, `format` and a list of `args`.
 Contents are in parsed form, meaning the initial ',' in the format string or any
 trailing null bytes in the data are not present here.
 """
-# struct OSCMessage
-#     address::StringView
-#     format::StringView
-#     args::Vector{Any} # parsed arguments
-# end
-
 struct OSCMessage
     data::Vector{UInt8}
     size::UInt64
@@ -24,7 +50,12 @@ struct OSCMessage
     args_start::UInt64
 end
 
-function OSCMessage(address::StringView, format::StringView, args...;initial_alloc::UInt64=UInt64(256))
+function OSCMessage(
+    address::StringView, 
+    format::StringView, 
+    args...;
+    initial_alloc::UInt64=UInt64(256))
+
     initial_alloc = max(initial_alloc, length(address) + length(format) + 8)
     data = zeros(UInt8, initial_alloc)
 
@@ -146,38 +177,6 @@ end
 
 function Base.:(==)(x::OSCBundleElement, y::OSCBundleElement)
     return x.size == y.size && x.content==y.content
-end
-
-#-------------------------------------------
-# Blob
-#-------------------------------------------
-"""
-OSCBlob type to send `blob` elements via OSC.
-Consists of the 32 bit `size` and the corresponding `data` vector.
-"""
-struct OSCBlob
-    size::UInt32
-    data::Vector{UInt8}
-
-    function OSCBlob(size::UInt32, data::Vector{UInt8})
-        if length(data) != size
-            throw(ArgumentError("Blob size and data length do not match: $size vs $(length(data))"))
-        end
-        return new(size, data)
-    end
-end
-
-function Base.show(io::IO, blob::OSCBlob)
-    blob_repr = """
-    OSCBlob:
-    size: $(blob.size)
-    data: $(blob.data)
-    """
-    print(io, blob_repr)
-end
-
-function Base.:(==)(x::OSCBlob, y::OSCBlob)
-    return x.size == y.size && x.data==y.data
 end
 
 #-------------------------------------------
