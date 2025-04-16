@@ -10,14 +10,13 @@ const BUNDLE_ID = unsafe_load(Ptr{UInt64}(Base.pointer(BUNDLE_VEC)), 1)
 align_32(x) = 4 - (x - 1) % 4 + x
 
 # put UInt32 into big endian byte array
-function encode_uint32(val::UInt32)::Vector{UInt8}
+function encode_uint32!(data::Vector{UInt8}, idx::Int64, val::Union{UInt32, Int32, Float32})::Nothing
     ptr = pointer(reinterpret(UInt8, [val]))
-    out = zeros(UInt8, 4)
-    out[4] = unsafe_load(ptr)
-    out[3] = unsafe_load(ptr+1)
-    out[2] = unsafe_load(ptr+2)
-    out[1] = unsafe_load(ptr+3)
-    return out
+    @inbounds data[idx+3] = unsafe_load(ptr)
+    @inbounds data[idx+2] = unsafe_load(ptr+1)
+    @inbounds data[idx+1] = unsafe_load(ptr+2)
+    @inbounds data[idx] = unsafe_load(ptr+3)
+    return nothing
 end
 
 # read uint32 from big endian vector
@@ -26,18 +25,17 @@ function decode_uint32(data::Vector{UInt8})::UInt32
 end
 
 # put UInt64 into big endian byte array
-function encode_uint64(val::UInt64)::Vector{UInt8}
+function encode_uint64!(data::Vector{UInt8}, idx::Int64, val::Union{UInt64, Float64, Int64})::Nothing
     ptr = pointer(reinterpret(UInt8, [val]))
-    out = zeros(UInt8, 8)
-    out[8] = unsafe_load(ptr)
-    out[7] = unsafe_load(ptr+1)
-    out[6] = unsafe_load(ptr+2)
-    out[5] = unsafe_load(ptr+3)
-    out[4] = unsafe_load(ptr+4)
-    out[3] = unsafe_load(ptr+5)
-    out[2] = unsafe_load(ptr+6)
-    out[1] = unsafe_load(ptr+7)
-    return out
+    @inbounds data[idx+7] = unsafe_load(ptr)
+    @inbounds data[idx+6] = unsafe_load(ptr+1)
+    @inbounds data[idx+5] = unsafe_load(ptr+2)
+    @inbounds data[idx+4] = unsafe_load(ptr+3)
+    @inbounds data[idx+3] = unsafe_load(ptr+4)
+    @inbounds data[idx+2] = unsafe_load(ptr+5)
+    @inbounds data[idx+1] = unsafe_load(ptr+6)
+    @inbounds data[idx] = unsafe_load(ptr+7)
+    return nothing
 end
 
 # read uint64 from big endian vector

@@ -253,13 +253,13 @@ Encode the given `arg` of type `c` to its network output byte vector.
 """
 function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::Union{Int32, Float32})::Int64
     # if
-    @inbounds data[idx:idx+3] = encode_uint32(reinterpret(UInt32, arg))
+    encode_uint32!(data, idx, arg)
     return idx+4
 end
 
 function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::Union{Int64, UInt64, Float64})::Int64
     # hdt
-    @inbounds data[idx:idx+7] = encode_uint64(reinterpret(UInt64, arg))
+    encode_uint64!(data, idx, arg)
     return idx+8
 end
 
@@ -283,9 +283,8 @@ end
 
 function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::OSCBlob)::Int64
     # b
-    s = encode_uint32(arg.size)
-    data[idx:idx+3] = s
-    data[idx+4:idx+3+arg.size] = arg.data
+    encode_uint32!(data, idx, arg.size)
+    @inbounds data[idx+4:idx+3+arg.size] = arg.data
     return idx + 4 + arg.size
 end
 
@@ -345,13 +344,13 @@ function encodeOSC(bundle::OSCBundle)::Vector{UInt8}
     @inbounds data[1:8] = BUNDLE_VEC
 
     # encode timetag
-    @inbounds data[9:16] = encode_uint64(bundle.timetag)
+    encode_uint64!(data, 9, bundle.timetag)
     idx = 17
 
     # encode elements
     for e in bundle.elements
         encoded_content = encodeOSC(e.content)
-        @inbounds data[idx:idx+3] = encode_uint32(e.size)
+        encode_uint32!(data, idx, e.size)
         @inbounds data[idx+4:idx+3+length(encoded_content)] = encoded_content
         idx += 4 + length(encoded_content)
     end
