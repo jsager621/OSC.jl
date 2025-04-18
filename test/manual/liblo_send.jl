@@ -1,35 +1,38 @@
 using Sockets
 using OSC
+using StringViews
 
 HOST = ip"127.0.0.1"
 PORT = 7770
 
 function main()
+    send_data = Vector{Vector{UInt8}}()
+
     blob = OSCBlob(UInt32(8), UInt8[0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x30])
     blob_msg = OSCMessage(
-        "/blobtest",
-        "b",
+        StringView("/blobtest"),
+        StringView("b"),
         blob
     )
 
     foo_msg = OSCMessage(
-        "/foo/bar",
-        "fi",
+        StringView("/foo/bar"),
+        StringView("fi"),
         Float32(47.11),
         Int32(1337)
     )
 
     generic_msg = OSCMessage(
-        "/test1", 
-        "ifsbhtdScmTFNI",  # liblo does not support 'r'
+        StringView("/test1"), 
+        StringView("ifsbhtdScmTFNI"),  # liblo does not support 'r'
         Int32(5),
         Float32(6),
-        "test",
+        StringView("test"),
         blob,
         Int64(12345),
         UInt64(0xFF00FF00C0FFEE00),
         Float64(47.11),
-        "Symbol",
+        StringView("Symbol"),
         UInt32(255),
         UInt8[0x10, 0x20, 0x30, 0x40],
         true,
@@ -38,7 +41,7 @@ function main()
         nothing)
 
     quit_msg = OSCMessage(
-        "/quit"
+        StringView("/quit")
     )
 
     client = OSCClientUDP(1024)
@@ -53,7 +56,9 @@ function main()
     sleep(0.2)
     send(client, HOST, PORT, quit_msg)
     sleep(0.2)
+    
 end
+
 
 main()
 

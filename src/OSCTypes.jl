@@ -62,15 +62,15 @@ function OSCMessage(
     # insert address
     @inbounds data[1:length(address.data)] = address.data
     idx = align_32(length(address)+1)
-    format_start = idx + 1
+    @inbounds data[idx] = UInt8(',')
 
     # no format, no args
     if isempty(format)
-        return OSCMessage(data, idx-1, length(address), 0, 0, 0)
+        return OSCMessage(data, align_32(idx)-1, length(address), 0, 0, 0)
     end
 
     # insert format
-    @inbounds data[idx] = UInt8(',')
+    format_start = idx + 1
     format_end = idx + length(format.data)
     @inbounds data[idx + 1:format_end] = format.data
     idx = align_32(format_end+1) # null terminate + align

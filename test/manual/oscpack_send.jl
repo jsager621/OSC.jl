@@ -1,26 +1,27 @@
 using Sockets
 using OSC
+using StringViews
 
 HOST = ip"127.0.0.1"
-PORT = 8000
+PORT = 7000
 
 function main()
     test1 = OSCBundleElement(OSCMessage(
-        "/test1",
-        "Tifs",
+        StringView("/test1"),
+        StringView("Tifs"),
         true,
         Int32(1337),
         Float32(47.11),
-        "test"        
+        StringView("test")        
     ))
 
     test2 = OSCBundleElement(OSCMessage(
-        "/test2",
-        "Tifs",
+        StringView("/test2"),
+        StringView("Tifs"),
         true,
         Int32(1337),
         Float32(47.11),
-        "test"        
+        StringView("test")        
     ))
 
 
@@ -31,6 +32,7 @@ function main()
     send(client, HOST, PORT, bundle)
     sleep(0.2)   
 end
+
 
 main()
 

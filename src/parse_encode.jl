@@ -34,6 +34,7 @@ args: Any[]
 """
 function parseOSC(buffer::Vector{UInt8})::Union{OSCBundle, OSCMessage}
     if length(buffer) % 4 != 0
+        println(buffer)
         throw(OSCParseException("Buffer is not 32 bit aligned."))
     end
 
