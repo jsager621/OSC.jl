@@ -79,7 +79,7 @@ end
 
 function dispatch_message(srv::OSCServer, msg::OSCBundle)
     for e in msg.elements
-        dispatch_message(srv, e.content)
+        Threads.@spawn dispatch_message(srv, e.content)
     end
 end
 
