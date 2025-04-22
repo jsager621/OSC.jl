@@ -16,8 +16,8 @@ On send, it enforces that the packet does not excceed the `max_payload`.
 """
 struct OSCClientUDP <: OSCClient
     socket::UDPSocket
-    max_payload::Int64
-    OSCClientUDP(max_payload::Int64) = new(UDPSocket(), max_payload)
+    max_payload::Integer
+    OSCClientUDP(max_payload::Integer) = new(UDPSocket(), max_payload)
 end
 
 function Sockets.send(
