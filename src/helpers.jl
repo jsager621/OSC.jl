@@ -10,7 +10,7 @@ const BUNDLE_ID = unsafe_load(Ptr{UInt64}(Base.pointer(BUNDLE_VEC)), 1)
 align_32(x) = 4 - (x - 1) % 4 + x
 
 # put UInt32 into big endian byte array
-function encode_uint32!(data::Vector{UInt8}, idx::Int64, val::Union{UInt32, Int32, Float32})::Nothing
+function encode_uint32!(data::Vector{UInt8}, idx::Integer, val::Union{UInt32, Int32, Float32})::Nothing
     ptr = pointer(reinterpret(UInt8, [val]))
     @inbounds data[idx+3] = unsafe_load(ptr)
     @inbounds data[idx+2] = unsafe_load(ptr+1)
@@ -25,7 +25,7 @@ function decode_uint32(data::Vector{UInt8})::UInt32
 end
 
 # put UInt64 into big endian byte array
-function encode_uint64!(data::Vector{UInt8}, idx::Int64, val::Union{UInt64, Float64, Int64})::Nothing
+function encode_uint64!(data::Vector{UInt8}, idx::Integer, val::Union{UInt64, Float64, Int64})::Nothing
     ptr = pointer(reinterpret(UInt8, [val]))
     @inbounds data[idx+7] = unsafe_load(ptr)
     @inbounds data[idx+6] = unsafe_load(ptr+1)

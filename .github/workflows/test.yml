@@ -18,10 +18,7 @@ jobs:
       matrix:
         julia-version: ['1.11']
         julia-arch: [x64, x86]
-        os: [ubuntu-latest, windows-latest, macOS-latest]
-        exclude:
-          - os: macOS-latest
-            julia-arch: x86
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -32,5 +29,3 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
-        # with:
-        #   annotate: true

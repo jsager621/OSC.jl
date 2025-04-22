@@ -260,44 +260,44 @@ end
 """
 Encode the given `arg` of type `c` to its network output byte vector.
 """
-function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::Union{Int32, Float32})::Int64
+function encodeArgument!(data::Vector{UInt8}, idx::Integer, arg::Union{Int32, Float32})::Int64
     # if
     encode_uint32!(data, idx, arg)
     return idx+4
 end
 
-function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::Union{Int64, UInt64, Float64})::Int64
+function encodeArgument!(data::Vector{UInt8}, idx::Integer, arg::Union{Int64, UInt64, Float64})::Int64
     # hdt
     encode_uint64!(data, idx, arg)
     return idx+8
 end
 
-function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::StringView)::Int64
+function encodeArgument!(data::Vector{UInt8}, idx::Integer, arg::StringView)::Int64
     # Ss
     @inbounds data[idx:idx+length(arg.data)-1] = arg.data
     return align_32(idx+length(arg.data)+1)
 end
 
-function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::Vector{UInt8})::Int64
+function encodeArgument!(data::Vector{UInt8}, idx::Integer, arg::Vector{UInt8})::Int64
     # m
     data[idx:idx+3] = arg
     return idx+4
 end
 
-function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::UInt32)::Int64
+function encodeArgument!(data::Vector{UInt8}, idx::Integer, arg::UInt32)::Int64
     # rc
     data[idx:idx+3] = reinterpret(UInt8, [arg])
     return idx+4
 end
 
-function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::OSCBlob)::Int64
+function encodeArgument!(data::Vector{UInt8}, idx::Integer, arg::OSCBlob)::Int64
     # b
     encode_uint32!(data, idx, arg.size)
     @inbounds data[idx+4:idx+3+arg.size] = arg.data
     return idx + 4 + arg.size
 end
 
-function encodeArgument!(data::Vector{UInt8}, idx::Int64, arg::Union{Nothing, Bool})::Int64
+function encodeArgument!(data::Vector{UInt8}, idx::Integer, arg::Union{Nothing, Bool})::Int64
     # TFNI
     return idx
 end
