@@ -99,19 +99,19 @@ For now, the folder `test/manual/` contains the package files and the correspond
 Note that compiling the C and C++ files there requires the rest of the liblo and oscpack libraries, respectively.
 
 # Performance
-Raw read/write performance is now comparable to Liblo. 
+Raw read/write performance is now comparable to liblo. 
 Note that parse/read performance works by directly writing the incoming buffer into the data structure.
 To use the OSC arguments in convenient Julia types they still need to be parsed which is slower (probably improvable).
 
 ```
-Liblo parse:  56.270000 ns per message
-Liblo encode:  96.135000 ns per message
+liblo parse:  56.270000 ns per message
+liblo encode:  96.135000 ns per message
 
 OSC.jl parse: 53.934574127197266 ns per message
 OSC.jl encode: 122.9095458984375 ns per message
 
 With parsing to convenient types:
-OSC.jl Read Performance: 209.98108386993408 nanoseconds per message
+OSC.jl parse: 209.98108386993408 ns per message
 ```
 
 # TODO
