@@ -27,6 +27,48 @@ t = Threads.@spawn listenForever(srv)
 sleep(5)
 
 # close the server socket
+close(srv)</code></pre><p>The <code>invert_matching</code> flag allows servers to invert pattern and address on incoming messages. This can be used to match multiple addresses to the same callback:</p><pre><code class="language-julia hljs"># matches any incoming message with address starting with &quot;/abc/&quot;.
+callbacks = Dict{String, Function}(
+        &quot;/abc/*&quot; =&gt; (s, args) -&gt; myOtherCallback(s, args)
+    )
+
+srv = OSCServerUDP(HOST, PORT, callbacks, invert_matching=true)</code></pre><p>The <code>timed_callbacks</code> flag lets servers execute OSCBundle contents at the time given by their timestamp. OSC.jl provides the internal helper functions <code>OSC.toDate</code> and <code>OSC.fromDate</code> to convert <code>UInt64</code> timestamps from and to julias <code>DateTime</code> format.</p><p>NOTE: timestamps are handled in whole second accuracy.</p><pre><code class="language-julia hljs">using OSC
+using Dates
+using Sockets
+using StringViews
+
+COUNT = 0
+
+function myCallback(s, args)
+    global COUNT += 1
+    println(args)
+end
+
+callbacks = Dict{String, Function}(
+        &quot;/testmsg&quot; =&gt; (s, args) -&gt; myCallback(s, args)
+    )
+
+SOCK = UDPSocket()
+HOST = ip&quot;127.0.0.1&quot;
+PORT = 8000
+srv = OSCServerUDP(HOST, PORT, callbacks, timed_callbacks=true)
+ t = Threads.@spawn listenForever(srv)
+
+timed_bundle = OSCBundle(
+    OSC.fromDate(now() + Dates.Second(3)),
+    [
+        OSCBundleElement(OSCMessage(
+            StringView(&quot;/testmsg&quot;), 
+            StringView(&quot;i&quot;), 
+            Int32(5),
+        ))
+    ]
+)
+
+client = OSCClientUDP(1024)
+send(client, HOST, PORT, timed_bundle)
+
+sleep(4)
 close(srv)</code></pre><h1 id="Client"><a class="docs-heading-anchor" href="#Client">Client</a><a id="Client-1"></a><a class="docs-heading-anchor-permalink" href="#Client" title="Permalink"></a></h1><p>The <code>OSCClientUDP</code> is a simple wrapper around a <code>UDPSocket</code> that ensures sending a packet does not exceed the <code>max_payload</code> size. Additionally, the package defines <code>send</code> functions on top of <code>Sockets.send</code> to directly pass <code>OSCMessage</code> and <code>OSCBundle</code> objects to a <code>UDPSocket</code>.</p><pre><code class="language-julia hljs">using OSC
 using Sockets
 using StringViews
@@ -55,4 +97,4 @@ send(sock, HOST, PORT, encodeOSC(base_types))
 
 # or via the client object that ensures payload size limits
 client = OSCClientUDP(1024)
-send(client, HOST, PORT, base_types)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parse_encode/">« Encode and Parse</a><a class="docs-footer-nextpage" href="../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.1 on <span class="colophon-date" title="Wednesday 23 April 2025 07:18">Wednesday 23 April 2025</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+send(client, HOST, PORT, base_types)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../parse_encode/">« Encode and Parse</a><a class="docs-footer-nextpage" href="../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.2 on <span class="colophon-date" title="Monday 5 May 2025 12:54">Monday 5 May 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
