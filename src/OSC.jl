@@ -8,6 +8,7 @@ export OSCClientUDP
 
 using Sockets
 using StringViews
+using Dates
 
 include("helpers.jl")
 include("OSCTypes.jl")

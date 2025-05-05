@@ -51,3 +51,18 @@ function extend_buffer!(data::Vector{UInt8})::Nothing
     data = new_buf
     return nothing
 end
+
+# OSC timestamp (NTP format 64 bit) to DateTime
+# second resolution only
+function toDate(timestamp::UInt64)::DateTime
+    seconds = reinterpret(UInt32, [timestamp])[1]
+    return unix2datetime(seconds)
+end
+
+# DateTime to OSC timestamp (NTP format 64 bit)
+function fromDate(date::DateTime)::UInt64
+    fractions = UInt32(0)
+    seconds = round(UInt32, datetime2unix(date))
+
+    return reinterpret(UInt64, [seconds, fractions])[1]
+end
