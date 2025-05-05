@@ -115,10 +115,8 @@ OSC.jl parse: 209.98108386993408 ns per message
 ```
 
 # TODO
-* timetag handling (currently only handles as UInt64)
 * array (`[` and `]`) support
 * convenience constructor that infers format string
 * automate compatibility tests
-* benchmarking and performance improvements
 * TCP support
 
